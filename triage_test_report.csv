@@ -1,0 +1,43 @@
+Test Name,Input,Expected Tag,Actual Tag,Result,Reason
+test_ambulance_arrival,{'ambulance_arrival': True},RED,RED,PASS,Patient arrived by ambulance
+test_bp_edge_cases,"{'systolic_bp': 120, 'diastolic_bp': 121, 'symptoms': []}",RED,RED,PASS,Critical High Blood Pressure: 120.0/121.0
+test_bp_normal,"{'systolic_bp': 120, 'diastolic_bp': 80, 'symptoms': []}",GREEN,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_bp_red_high,"{'systolic_bp': 230, 'diastolic_bp': 100, 'symptoms': []}",RED,RED,PASS,Critical High Blood Pressure: 230.0/100.0
+test_bp_red_low,"{'systolic_bp': 70, 'diastolic_bp': 50, 'symptoms': []}",RED,RED,PASS,Critical Low Blood Pressure: 70.0/50.0
+test_bp_yellow_high,"{'systolic_bp': 180, 'diastolic_bp': 110, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning High Blood Pressure: 180.0/110.0
+test_bp_yellow_low,"{'systolic_bp': 85, 'diastolic_bp': 60, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning Low Blood Pressure: 85.0/60.0
+test_critical_o2_red,"{'o2_saturation': 85, 'symptoms': []}",RED,RED,PASS,Critical O₂ saturation: 85.0%
+test_default_green,{'symptoms': []},GREEN,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_gcs_edge_cases,"{'gcs_score': 14, 'symptoms': []}",RED,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_gcs_normal,"{'gcs_score': 15, 'symptoms': []}",GREEN,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_gcs_red,"{'gcs_score': 8, 'symptoms': []}",RED,RED,PASS,Critical GCS Score: 8
+test_gcs_yellow,"{'gcs_score': 12, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning GCS Score: 12
+test_green_symptom_and_normal_vitals,"{'o2_saturation': 97, 'symptoms': ['constipation']}",GREEN,GREEN,PASS,GREEN TAG conditions: constipation
+test_green_symptoms,{'symptoms': ['mild_diarrhea']},GREEN,GREEN,PASS,GREEN TAG conditions: mild_diarrhea
+test_hr_edge_cases,"{'heart_rate': 151, 'symptoms': []}",RED,RED,PASS,Critical High Heart Rate: 151.0 bpm
+test_hr_normal,"{'heart_rate': 75, 'symptoms': []}",GREEN,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_hr_red_high,"{'heart_rate': 160, 'symptoms': []}",RED,RED,PASS,Critical High Heart Rate: 160.0 bpm
+test_hr_red_low,"{'heart_rate': 35, 'symptoms': []}",RED,RED,PASS,Critical Low Heart Rate: 35.0 bpm
+test_hr_yellow_high,"{'heart_rate': 120, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning High Heart Rate: 120.0 bpm
+test_hr_yellow_low,"{'heart_rate': 45, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning Low Heart Rate: 45.0 bpm
+test_multiple_abnormal_vitals,"{'o2_saturation': 85, 'heart_rate': 35, 'symptoms': []}",RED,RED,PASS,Critical O₂ saturation: 85.0%
+test_multiple_green_symptoms,"{'symptoms': ['constipation', 'eye_problems']}",GREEN,GREEN,PASS,"GREEN TAG conditions: constipation, eye_problems"
+test_multiple_yellow_symptoms,"{'symptoms': ['headache_moderate', 'vomiting_nausea']}",YELLOW,YELLOW,PASS,"YELLOW TAG conditions: headache_moderate, vomiting_nausea"
+test_o2_edge_cases,"{'o2_saturation': 94, 'symptoms': []}",RED,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_o2_normal,"{'o2_saturation': 97, 'symptoms': []}",GREEN,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_o2_yellow,"{'o2_saturation': 92, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning O₂ saturation: 92.0%
+test_red_and_yellow_symptom,"{'symptoms': ['chest_pain', 'headache_moderate']}",RED,RED,PASS,Presence of RED TAG symptom: chest_pain
+test_red_symptoms,{'symptoms': ['abdominal_pain_severe']},RED,RED,PASS,Presence of RED TAG symptom: abdominal_pain_severe
+test_red_vital_and_green_symptom,"{'o2_saturation': 85, 'symptoms': ['constipation']}",RED,RED,PASS,Critical O₂ saturation: 85.0%
+test_red_vital_and_yellow_symptom,"{'o2_saturation': 85, 'symptoms': ['headache_moderate']}",RED,RED,PASS,Critical O₂ saturation: 85.0%
+test_temp_edge_cases,"{'temperature': 40.1, 'symptoms': []}",RED,RED,PASS,Critical High Temperature: 40.1°C
+test_temp_normal,"{'temperature': 37, 'symptoms': []}",GREEN,GREEN,PASS,No urgent symptoms or abnormal vital signs detected
+test_temp_red_high,"{'temperature': 41, 'symptoms': []}",RED,RED,PASS,Critical High Temperature: 41.0°C
+test_temp_red_low,"{'temperature': 34, 'symptoms': []}",RED,RED,PASS,Critical Low Temperature: 34.0°C
+test_temp_yellow_high,"{'temperature': 39, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning High Temperature: 39.0°C
+test_temp_yellow_low,"{'temperature': 35.5, 'symptoms': []}",YELLOW,YELLOW,PASS,Concerning Low Temperature: 35.5°C
+test_yellow_and_green_symptom,"{'symptoms': ['headache_moderate', 'constipation']}",YELLOW,YELLOW,PASS,YELLOW TAG conditions: headache_moderate
+test_yellow_symptoms,{'symptoms': ['unexplained_tachycardia']},YELLOW,YELLOW,PASS,YELLOW TAG conditions: unexplained_tachycardia
+test_yellow_vital_and_green_symptom,"{'o2_saturation': 92, 'symptoms': ['constipation']}",YELLOW,YELLOW,PASS,Concerning O₂ saturation: 92.0%
+test_yellow_vital_and_red_symptom,"{'o2_saturation': 92, 'symptoms': ['chest_pain']}",RED,RED,PASS,Presence of RED TAG symptom: chest_pain
+test_yellow_vital_and_yellow_symptom,"{'o2_saturation': 92, 'symptoms': ['headache_moderate']}",YELLOW,YELLOW,PASS,Concerning O₂ saturation: 92.0%

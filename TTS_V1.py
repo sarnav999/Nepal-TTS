@@ -4,6 +4,7 @@ import datetime
 import requests
 import json
 import re
+from triage_logic import assess_triage as logic_assess_triage
 
 class TriageSystem:
     def __init__(self, root):
@@ -297,87 +298,20 @@ class TriageSystem:
     
     def assess_triage(self):
         try:
-            # Initialize variables
-            triage_tag = "GREEN"
-            triage_time = "60 minutes"
-            triage_reason = "No urgent symptoms or abnormal vital signs detected"
-            possible_diagnoses = []
-
-            # Check ambulance first (immediate RED)
-            if self.ambulance_var.get():
-                self.display_result("RED", "15 minutes", 
-                                  "Patient arrived by ambulance",
-                                  ["Trauma", "Acute Medical Emergency", "Critical Condition"])
-                self.get_perplexity_diagnosis()
-                return
-
-            # Check vital signs that warrant immediate RED tag
-            vitals_check = self.check_vital_signs()
-            if vitals_check["is_red"]:
-                self.display_result("RED", "15 minutes", 
-                                  vitals_check["reason"],
-                                  vitals_check["diagnoses"])
-                self.get_perplexity_diagnosis()
-                return
-
-            # Check RED symptoms
-            for symptom_id, symptom_data in self.red_symptoms.items():
-                if self.symptom_vars[symptom_id].get():
-                    self.display_result("RED", "15 minutes",
-                                      f"Presence of RED TAG symptom: {symptom_data['name']}",
-                                      symptom_data["diagnoses"])
-                    self.get_perplexity_diagnosis()
-                    return
-
-            # Check YELLOW conditions (continue checking all)
-            yellow_found = False
-            yellow_reason = ""
-            yellow_diagnoses = []
-
-            # Check vital signs for yellow
-            vitals_yellow = self.check_vital_signs_yellow()
-            if vitals_yellow["is_yellow"]:
-                yellow_found = True
-                yellow_reason = vitals_yellow["reason"]
-                yellow_diagnoses.extend(vitals_yellow["diagnoses"])
-
-            # Check YELLOW symptoms
-            for symptom_id, symptom_data in self.yellow_symptoms.items():
-                if self.symptom_vars[symptom_id].get():
-                    yellow_found = True
-                    if yellow_reason:
-                        yellow_reason += "; "
-                    yellow_reason += symptom_data["name"]
-                    yellow_diagnoses.extend(symptom_data["diagnoses"])
-
-            if yellow_found:
-                self.display_result("YELLOW", "30 minutes", 
-                                  f"YELLOW TAG conditions: {yellow_reason}",
-                                  yellow_diagnoses)
-                self.get_perplexity_diagnosis()
-                return
-
-            # Check GREEN symptoms
-            green_diagnoses = []
-            green_reason = []
-            for symptom_id, symptom_data in self.green_symptoms.items():
-                if self.symptom_vars[symptom_id].get():
-                    green_reason.append(symptom_data["name"])
-                    green_diagnoses.extend(symptom_data["diagnoses"])
-
-            if green_reason:
-                self.display_result("GREEN", "60 minutes",
-                                  f"GREEN TAG conditions: {', '.join(green_reason)}",
-                                  green_diagnoses)
-                self.get_perplexity_diagnosis()
-                return
-
-            # Default case
-            self.display_result("GREEN", "60 minutes",
-                              "No urgent symptoms or abnormal vital signs detected",
-                              ["Routine Check-up", "Minor Ailment"])
-            self.get_perplexity_diagnosis()
-
+            # Gather patient data from UI
+            patient_data = {
+                "ambulance_arrival": self.ambulance_var.get(),
+                "o2_saturation": self.o2_saturation.get(),
+                "gcs_score": self.gcs_score.get(),
+                "temperature": self.temperature.get(),
+                "systolic_bp": self.systolic_bp.get(),
+                "diastolic_bp": self.diastolic_bp.get(),
+                "heart_rate": self.heart_rate.get(),
+                "symptoms": [symptom_id for symptom_id, var in self.symptom_vars.items() if var.get()]
+            }
+            # Use the extracted logic
+            result = logic_assess_triage(patient_data)
+            self.display_result(result["tag"], result["time"], result["reason"], result["diagnoses"])
         except Exception as e:
             self.display_result("ERROR", "N/A", 
                               f"Assessment failed: {str(e)}",
@@ -649,49 +583,6 @@ class TriageSystem:
     def strip_html_tags(self, text):
         clean = re.compile('<.*?>')
         return re.sub(clean, '', text)
-
-    def get_perplexity_diagnosis(self):
-        """Send selected symptoms to backend and update diagnosis section with API response"""
-        try:
-            # Gather selected symptoms
-            selected_symptoms = []
-            for symptom_id, symptom_data in {**self.red_symptoms, **self.yellow_symptoms, **self.green_symptoms}.items():
-                if self.symptom_vars[symptom_id].get():
-                    selected_symptoms.append(symptom_data["name"])
-            symptoms_text = ", ".join(selected_symptoms) if selected_symptoms else "No specific symptoms selected"
-
-            # Optionally, gather medications (not implemented in UI, so empty)
-            medications = []
-
-            # Prepare payload
-            payload = {
-                "symptoms": symptoms_text,
-                "medications": medications
-            }
-            response = requests.post(
-                "http://localhost:5000/triage",
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(payload),
-                timeout=15
-            )
-            if response.status_code == 200:
-                data = response.json()
-                answer = data.get("answer", "No answer from API.")
-                # Update diagnosis section with API answer, stripping HTML tags
-                self.diagnosis_header.configure(text="Perplexity AI Recommendation:")
-                self.diagnosis_label.configure(text=self.strip_html_tags(answer))
-                self.diagnosis_header.pack(fill=tk.X, padx=10, pady=(5, 0))
-                self.diagnosis_label.pack(fill=tk.X, padx=10, pady=(5, 10))
-            else:
-                self.diagnosis_header.configure(text="Perplexity AI Error:")
-                self.diagnosis_label.configure(text=f"API error: {response.status_code}")
-                self.diagnosis_header.pack(fill=tk.X, padx=10, pady=(5, 0))
-                self.diagnosis_label.pack(fill=tk.X, padx=10, pady=(5, 10))
-        except Exception as e:
-            self.diagnosis_header.configure(text="Perplexity AI Error:")
-            self.diagnosis_label.configure(text=f"Exception: {str(e)}")
-            self.diagnosis_header.pack(fill=tk.X, padx=10, pady=(5, 0))
-            self.diagnosis_label.pack(fill=tk.X, padx=10, pady=(5, 10))
 
 # Main function to run the application
 def main():
