@@ -12,6 +12,16 @@ export default function CareTeamPatientView({ patient }) {
   const [missingFields, setMissingFields] = useState([]);
   const [alerts, setAlerts]               = useState([]);
   const [loading, setLoading]             = useState(false);
+  const [showVitalsForm, setShowVitalsForm] = useState(false);
+  const [manualVitals, setManualVitals] = useState({
+    heartRate: '',
+    systolicBP: '',
+    diastolicBP: '',
+    respiratoryRate: '',
+    temperature: '',
+    oxygenSaturation: ''
+  });
+  const [vitalsLoading, setVitalsLoading] = useState(false);
 
   /** 1️⃣ Refresh structured profile + alerts + missing_fields **/
   useEffect(() => {
@@ -180,6 +190,53 @@ export default function CareTeamPatientView({ patient }) {
     }
   };
 
+  const handleVitalsChange = e => {
+    const { name, value } = e.target;
+    setManualVitals(v => ({ ...v, [name]: value }));
+  };
+
+  const handleVitalsSubmit = async e => {
+    e.preventDefault();
+    setVitalsLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/vitals/${patient.username}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          heart_rate: manualVitals.heartRate,
+          systolic_bp: manualVitals.systolicBP,
+          diastolic_bp: manualVitals.diastolicBP,
+          respiratory_rate: manualVitals.respiratoryRate,
+          temperature: manualVitals.temperature,
+          oxygen_saturation: manualVitals.oxygenSaturation
+        })
+      });
+      if (res.ok) {
+        alert('✅ Vitals updated successfully!');
+        setShowVitalsForm(false);
+        setManualVitals({
+          heartRate: '',
+          systolicBP: '',
+          diastolicBP: '',
+          respiratoryRate: '',
+          temperature: '',
+          oxygenSaturation: ''
+        });
+        // Refresh vitals
+        const vitalsRes = await fetch(`${BACKEND_URL}/vitals/${patient.username}`);
+        const vitalsJson = await vitalsRes.json();
+        setVitals(vitalsJson);
+      } else {
+        alert('❌ Failed to update vitals.');
+      }
+    } catch (err) {
+      alert('❌ Error updating vitals.');
+      console.error(err);
+    } finally {
+      setVitalsLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {/* Alerts banner */}
@@ -193,6 +250,52 @@ export default function CareTeamPatientView({ patient }) {
       )}
 
       <h3 className="text-xl font-semibold mb-3">🧾 Profile: {patient.name}</h3>
+
+      {/* Manual Vitals Entry */}
+      <button
+        className="bg-blue-600 text-white px-4 py-2 rounded mb-4"
+        onClick={() => setShowVitalsForm(v => !v)}
+        type="button"
+      >
+        {showVitalsForm ? 'Cancel Manual Vitals Entry' : 'Enter Vitals Manually'}
+      </button>
+      {showVitalsForm && (
+        <form onSubmit={handleVitalsSubmit} className="mb-6 p-4 border rounded bg-gray-50">
+          <div className="mb-2">
+            <label className="block mb-1">Heart Rate (bpm):</label>
+            <input type="number" name="heartRate" value={manualVitals.heartRate} onChange={handleVitalsChange} className="border p-1 rounded w-full" required />
+          </div>
+          <div className="mb-2 flex gap-2">
+            <div className="flex-1">
+              <label className="block mb-1">Systolic BP (mmHg):</label>
+              <input type="number" name="systolicBP" value={manualVitals.systolicBP} onChange={handleVitalsChange} className="border p-1 rounded w-full" required />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1">Diastolic BP (mmHg):</label>
+              <input type="number" name="diastolicBP" value={manualVitals.diastolicBP} onChange={handleVitalsChange} className="border p-1 rounded w-full" required />
+            </div>
+          </div>
+          <div className="mb-2">
+            <label className="block mb-1">Respiratory Rate (breaths/min):</label>
+            <input type="number" name="respiratoryRate" value={manualVitals.respiratoryRate} onChange={handleVitalsChange} className="border p-1 rounded w-full" required />
+          </div>
+          <div className="mb-2">
+            <label className="block mb-1">Temperature (°C):</label>
+            <input type="number" step="0.1" name="temperature" value={manualVitals.temperature} onChange={handleVitalsChange} className="border p-1 rounded w-full" required />
+          </div>
+          <div className="mb-2">
+            <label className="block mb-1">Oxygen Saturation (SpO2, %):</label>
+            <input type="number" name="oxygenSaturation" value={manualVitals.oxygenSaturation} onChange={handleVitalsChange} className="border p-1 rounded w-full" required />
+          </div>
+          <button
+            type="submit"
+            className={`mt-2 px-4 py-2 rounded ${vitalsLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white'}`}
+            disabled={vitalsLoading}
+          >
+            {vitalsLoading ? 'Saving…' : 'Save Vitals'}
+          </button>
+        </form>
+      )}
 
       {/* free-text summary input */}
       <textarea
