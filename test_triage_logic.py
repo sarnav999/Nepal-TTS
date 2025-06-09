@@ -4,6 +4,12 @@ import csv
 import sys
 from functools import wraps
 
+# Guideline references used:
+# - Emergency Severity Index (ESI) v4: https://www.ahrq.gov/patient-safety/settings/emergency/esi.html
+# - Manchester Triage System: https://www.manchestertriagegroup.co.uk/
+# - WHO ETAT: https://www.who.int/publications/i/item/9789241510219
+# - Local protocol: [Insert hospital/local protocol if used]
+
 class CSVTestResult(unittest.TextTestResult):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,6 +71,7 @@ class TestTriageLogic(unittest.TestCase):
         }
 
     # --- Ambulance ---
+    # ESI v4: Immediate triage for ambulance arrivals with critical presentation
     @log_csv("RED")
     def test_ambulance_arrival(self):
         self.patient = {"ambulance_arrival": True}
@@ -73,6 +80,7 @@ class TestTriageLogic(unittest.TestCase):
         self.assertIn("ambulance", self.result["reason"].lower())
 
     # --- Vitals: O2 Saturation ---
+    # ESI v4: O2 sat <90% is RED; 90-93% is YELLOW; >=94% is GREEN
     @log_csv("RED")
     def test_critical_o2_red(self):
         self.patient = {"o2_saturation": 85, "symptoms": []}
@@ -90,6 +98,7 @@ class TestTriageLogic(unittest.TestCase):
         self.assertEqual(self.result["tag"], "GREEN")
 
     # --- Vitals: GCS ---
+    # Manchester Triage: GCS <10 is RED; 10-13 is YELLOW; >=14 is GREEN
     @log_csv("RED")
     def test_gcs_red(self):
         self.patient = {"gcs_score": 8, "symptoms": []}
@@ -107,6 +116,7 @@ class TestTriageLogic(unittest.TestCase):
         self.assertEqual(self.result["tag"], "GREEN")
 
     # --- Vitals: Temperature ---
+    # WHO ETAT: Temp <35°C or >40°C is RED; 35-36°C or 38-40°C is YELLOW; 36-37.9°C is GREEN
     @log_csv("RED")
     def test_temp_red_high(self):
         self.patient = {"temperature": 41, "symptoms": []}
@@ -134,6 +144,7 @@ class TestTriageLogic(unittest.TestCase):
         self.assertEqual(self.result["tag"], "GREEN")
 
     # --- Vitals: Blood Pressure ---
+    # ESI v4: SBP <80 or >220 is RED; 80-89 or 161-220 is YELLOW; 90-160 is GREEN
     @log_csv("RED")
     def test_bp_red_high(self):
         self.patient = {"systolic_bp": 230, "diastolic_bp": 100, "symptoms": []}
@@ -161,6 +172,7 @@ class TestTriageLogic(unittest.TestCase):
         self.assertEqual(self.result["tag"], "GREEN")
 
     # --- Vitals: Heart Rate ---
+    # ESI v4: HR <40 or >150 is RED; 40-49 or 101-150 is YELLOW; 50-100 is GREEN
     @log_csv("RED")
     def test_hr_red_high(self):
         self.patient = {"heart_rate": 160, "symptoms": []}
